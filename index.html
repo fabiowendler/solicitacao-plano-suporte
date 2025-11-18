@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Carimbo de Corridas - WhatsApp</title>
+
+  <style>
+    :root{--navy:#05243a;--white:#ffffff;--muted:#f4f7fa;--accent:#0b6b9f}
+    *{box-sizing:border-box;font-family:Inter, system-ui, Arial, sans-serif}
+    body{margin:0;background:var(--muted);color:#083047}
+    .container{max-width:980px;margin:28px auto;padding:20px;background:var(--white);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.08)}
+    header{display:flex;align-items:center;gap:16px}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(180deg,var(--navy),#0b4f6f);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700}
+    h1{margin:0;font-size:20px;color:var(--navy)}
+    p.lead{margin:6px 0 18px;color:#335263}
+    .card{background:linear-gradient(180deg,var(--white),#fbfeff);padding:14px;border-radius:10px;border:1px solid rgba(5,36,58,0.06)}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    label{font-size:13px;color:#23414f}
+    select,input[type="text"],input[type="datetime-local"],textarea{width:100%;padding:10px;border:1px solid #d6e6ee;border-radius:8px;font-size:14px}
+    textarea{min-height:90px;resize:vertical}
+    .col-2{flex:1 1 48%}
+    .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .btn{padding:8px 12px;border-radius:8px;border:none;background:var(--navy);color:#fff;cursor:pointer;font-weight:600}
+    .btn.secondary{background:#eef6fb;color:var(--navy)}
+    .small{padding:6px 8px;font-size:13px}
+    .preview{background:#fbfeff;border:1px dashed rgba(5,36,58,0.06);padding:12px;border-radius:8px;white-space:pre-wrap;font-family:monospace;color:#164a5b}
+    footer{text-align:right;font-size:13px;color:#0b6b9f;margin-top:14px}
+    .list-item{margin-top:8px}
+    .checkbox-group{display:flex;flex-direction:column;padding:8px;background:#f9fcff;border-radius:8px;border:1px solid #d6e6ee;margin-bottom:8px}
+    .checkbox-group label{display:flex;align-items:center;gap:8px;font-size:13px}
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <header>
+      <div class="logo">ATZ</div>
+      <div>
+        <h1>Carimbo de Corridas (WhatsApp)</h1>
+        <p class="lead">Use + para adicionar passageiros e rotas.</p>
+      </div>
+    </header>
+
+    <section class="card">
+
+      <label>Empresa</label>
+      <select id="company">
+        <option>Limeira</option>
+        <option>Araça Táxi</option>
+        <option>JC Itu</option>
+        <option>JC Jaguariaiva</option>
+        <option>Mega Táxi</option>
+        <option>Radio Táxi RG</option>
+        <option>Táxi 2000</option>
+        <option>Transportes Táxi 2.0</option>
+        <option>Transportes Botucatu</option>
+      </select>
+
+      <label style="margin-top:10px">Número da OS</label>
+      <input id="osNumber" type="text" placeholder="Ex: 1123456" />
+
+      <div class="row" style="margin-top:10px">
+        <div class="col-2">
+          <label>Data / Hora marcada</label>
+          <input id="dateTime" type="datetime-local" />
+        </div>
+
+        <div class="col-2" style="display:flex;align-items:center;gap:8px;margin-top:6px">
+          <input type="checkbox" id="immediate" />
+          <label style="margin:0">Embarque imediato</label>
+        </div>
+      </div>
+
+      <hr>
+
+      <label>Passageiros</label>
+      <div id="passengersList"></div>
+      <button type="button" class="btn small" id="addPassenger">+ Adicionar passageiro</button>
+
+      <hr>
+
+      <label>Locais de embarque / desembarque</label>
+      <div id="routesList"></div>
+      <button type="button" class="btn small" id="addRoute">+ Adicionar ponto</button>
+
+      <hr>
+
+      <label>Observações</label>
+      <textarea id="observations"></textarea>
+
+      <div class="actions">
+        <button type="button" class="btn" id="generate">Gerar mensagem</button>
+        <button type="button" class="btn secondary" id="copy">Copiar</button>
+        <button type="button" class="btn secondary" id="reset">Limpar</button>
+        <button type="button" class="btn" id="send">Enviar WhatsApp</button>
+      </div>
+
+      <label style="margin-top:10px">Pré-visualização:</label>
+      <div id="preview" class="preview">Nenhuma mensagem ainda.</div>
+
+      <footer>Dev by <strong>Fabio Wendler</strong></footer>
+
+    </section>
+  </div>
+
+<script>
+
+// ------------------------
+// PASSAGEIROS
+// ------------------------
+
+const passengersList = document.getElementById("passengersList");
+const routesList = document.getElementById("routesList");
+
+function updatePassengerCheckboxes() {
+
+  const passengers = [...document.querySelectorAll(".passenger-name")]
+      .map(i => i.value.trim())
+      .filter(v => v);
+
+  document.querySelectorAll(".checkbox-group").forEach(group => {
+
+    const selected = [...group.querySelectorAll("input[type=checkbox]")]
+      .filter(cb => cb.checked)
+      .map(cb => cb.value);
+
+    group.innerHTML = "";
+
+    passengers.forEach(name => {
+      const label = document.createElement("label");
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.value = name;
+      if (selected.includes(name)) check.checked = true;
+
+      label.append(check, name);
+      group.appendChild(label);
+    });
+  });
+}
+
+function addPassenger(name = "") {
+  const div = document.createElement("div");
+  div.className = "list-item";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = "Nome do Passageiro";
+  input.className = "passenger-name";
+  input.value = name;
+  input.oninput = updatePassengerCheckboxes;
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "btn secondary small";
+  remove.textContent = "Remover";
+  remove.onclick = () => {
+    div.remove();
+    updatePassengerCheckboxes();
+  };
+
+  div.append(input, remove);
+  passengersList.appendChild(div);
+  updatePassengerCheckboxes();
+}
+
+
+// ------------------------
+// PERCURSOS
+// ------------------------
+
+function addRoute() {
+  const div = document.createElement("div");
+  div.className = "list-item";
+
+  const checkboxGroup = document.createElement("div");
+  checkboxGroup.className = "checkbox-group";
+
+  const emb = document.createElement("input");
+  emb.type = "text";
+  emb.placeholder = "Embarque";
+  emb.className = "route-emb";
+
+  const des = document.createElement("input");
+  des.type = "text";
+  des.placeholder = "Desembarque";
+  des.className = "route-des";
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "btn secondary small";
+  remove.textContent = "Remover";
+  remove.onclick = () => div.remove();
+
+  div.append(checkboxGroup, emb, des, remove);
+  routesList.appendChild(div);
+
+  updatePassengerCheckboxes();
+}
+
+
+// ------------------------
+// INICIALIZAÇÃO
+// ------------------------
+
+addPassenger();
+addRoute();
+
+document.getElementById("addPassenger").onclick = () => addPassenger();
+document.getElementById("addRoute").onclick = () => addRoute();
+
+document.getElementById("immediate").onchange = function () {
+  document.getElementById("dateTime").disabled = this.checked;
+};
+
+document.getElementById("reset").onclick = () => location.reload();
+
+
+// ------------------------
+// GERAR MENSAGEM
+// ------------------------
+
+function buildMessage() {
+  const company = document.getElementById("company").value;
+  const os = document.getElementById("osNumber").value.trim();
+  const immediate = document.getElementById("immediate").checked;
+  const datetime = document.getElementById("dateTime").value;
+  const obs = document.getElementById("observations").value.trim();
+
+  const passengers = [...document.querySelectorAll(".passenger-name")]
+    .map(i => i.value.trim()).filter(v => v);
+
+  const routes = [...document.querySelectorAll("#routesList .list-item")].map(r => {
+    const checked = [...r.querySelectorAll(".checkbox-group input[type=checkbox]:checked")]
+      .map(cb => cb.value);
+    const emb = r.querySelector(".route-emb").value.trim();
+    const des = r.querySelector(".route-des").value.trim();
+
+    if (!checked.length && !emb && !des) return "";
+
+    return `Passageiros: ${checked.join(", ")}\nEmbarque: ${emb}\nDesembarque: ${des}`;
+  }).filter(v => v);
+
+  let msg = `Olá! Temos carro disponível para esse atendimento?\n\n`;
+  msg += `Empresa: ${company}\n`;
+  msg += os ? `OS: ${os}\n` : "";
+  msg += immediate ? `Embarque: IMEDIATO\n` : datetime ? `Data/Hora: ${new Date(datetime).toLocaleString("pt-BR")}\n` : "";
+  msg += passengers.length ? `\nPassageiros:\n${passengers.map((p,i)=>`${i+1}. ${p}`).join("\n")}\n` : "";
+  msg += routes.length ? `\nPercursos:\n${routes.map((r,i)=>`${i+1}.\n${r}`).join("\n\n")}\n` : "";
+  msg += obs ? `\nObservações:\n${obs}\n` : "";
+  msg += `\nPode confirmar o atendimento?\nAutonomoz agradece!`;
+
+  return msg;
+}
+
+document.getElementById("generate").onclick = () => {
+  document.getElementById("preview").textContent = buildMessage();
+};
+
+document.getElementById("copy").onclick = () =>
+  navigator.clipboard.writeText(document.getElementById("preview").textContent)
+    .then(() => alert("Copiado!"));
+
+document.getElementById("send").onclick = () => {
+  const msg = buildMessage();
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+};
+
+</script>
+</body>
+</html>
