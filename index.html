@@ -47,6 +47,8 @@
 
       <label>Empresa</label>
       <select id="company">
+        <option>plano suporte</option>
+        <option>permanecia</option>
         <option>Limeira</option>
         <option>Araça Táxi</option>
         <option>JC Itu</option>
@@ -60,16 +62,16 @@
 
       <label style="margin-top:10px">Número da OS</label>
       <input id="osNumber" type="text" placeholder="Ex: 1123456" />
-
+      
+<div class="col-2" style="display:flex;align-items:center;gap:8px;margin-top:6px">
+          <input type="checkbox" id="immediate" />
+          <label style="margin:0">Embarque imediato</label>
+        </div>
+      
       <div class="row" style="margin-top:10px">
         <div class="col-2">
           <label>Data / Hora marcada</label>
           <input id="dateTime" type="datetime-local" />
-        </div>
-
-        <div class="col-2" style="display:flex;align-items:center;gap:8px;margin-top:6px">
-          <input type="checkbox" id="immediate" />
-          <label style="margin:0">Embarque imediato</label>
         </div>
       </div>
 
